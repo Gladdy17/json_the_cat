@@ -1,30 +1,31 @@
 const needle = require('needle');
 
-// Access the breed name from command-line arguments
-const breed = process.argv[2];
+const fetchBreedDescription = function(breedName, callback) {
+  const url = `https://api.thecatapi.com/v1/breeds/search?q=${breedName}`;
 
-if (!breed) {
-  console.log("Please provide a breed name.");
-  process.exit(1);
-}
-
-const url = `https://api.thecatapi.com/v1/breeds/search?q=${breed}`;
-
-needle.get(url, (error, response) => {
-  if (error) {
-    console.error('Error fetching breed:', error);
-  } else if (response.statusCode !== 200) {
-    console.error('Error: Status code', response.statusCode);
-  } else {
-    const data = response.body;
-    if (data.length === 0) {
-      console.log("Breed not found.");
-    } else {
-      console.log("Breed information:", data[0]);
+  needle.get(url, (error, response) => {
+    if (error) {
+      callback(error, null); // Pass the error and null for description
+      return;
     }
-  }
-});
 
+    if (response.statusCode !== 200) {
+      callback(`Status Code ${response.statusCode}`, null); // Handle non-200 status code as an error
+      return;
+    }
+
+    const data = response.body;
+
+    if (data.length === 0) {
+      callback("Breed not found", null); // Pass an error message when no breed is found
+    } else {
+      const description = data[0].description;
+      callback(null, description); // Pass null for error and breed description
+    }
+  });
+};
+
+module.exports = { fetchBreedDescription };
 
 
 
